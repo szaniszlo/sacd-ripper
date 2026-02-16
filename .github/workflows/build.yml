@@ -1,0 +1,110 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake libiconv-hook-dev
+
+      - name: Configure CMake (Debug)
+        working-directory: tools/sacd_extract
+        run: cmake -DCMAKE_BUILD_TYPE=Debug .
+
+      - name: Build (Debug)
+        working-directory: tools/sacd_extract
+        run: make -j$(nproc)
+
+      - name: Test binary
+        working-directory: tools/sacd_extract
+        run: ./sacd_extract --help
+
+      - name: Configure CMake (Release)
+        working-directory: tools/sacd_extract
+        run: |
+          make clean
+          cmake -DCMAKE_BUILD_TYPE=Release .
+
+      - name: Build (Release)
+        working-directory: tools/sacd_extract
+        run: make -j$(nproc)
+
+      - name: Verify stripped binary
+        working-directory: tools/sacd_extract
+        run: |
+          ls -la sacd_extract
+          file sacd_extract
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew install cmake
+
+      - name: Configure CMake
+        working-directory: tools/sacd_extract
+        run: cmake -DCMAKE_BUILD_TYPE=Release .
+
+      - name: Build
+        working-directory: tools/sacd_extract
+        run: make -j$(sysctl -n hw.ncpu)
+
+      - name: Test binary
+        working-directory: tools/sacd_extract
+        run: ./sacd_extract --help
+
+      - name: Verify binary
+        working-directory: tools/sacd_extract
+        run: |
+          ls -la sacd_extract
+          file sacd_extract
+          otool -L sacd_extract
+
+  build-windows-cross:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt update
+          sudo apt install -y mingw-w64 cmake
+
+      - name: Build libiconv for Windows
+        run: |
+          wget -q http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz
+          tar -xzf libiconv-1.15.tar.gz
+          cd libiconv-1.15
+          ./configure --host=x86_64-w64-mingw32 --prefix=/usr/x86_64-w64-mingw32 --enable-static --quiet
+          make -j$(nproc) > /dev/null
+          sudo make install > /dev/null
+
+      - name: Configure CMake for Windows
+        working-directory: tools/sacd_extract
+        run: cmake -DMINGW64=YES -DCMAKE_BUILD_TYPE=Release .
+
+      - name: Build Windows binary
+        working-directory: tools/sacd_extract
+        run: make -j$(nproc)
+
+      - name: Verify Windows binary
+        working-directory: tools/sacd_extract
+        run: |
+          ls -la sacd_extract*
+          file sacd_extract*

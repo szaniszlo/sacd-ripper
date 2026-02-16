@@ -1,0 +1,71 @@
+# Build artifacts
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+cmake_uninstall.cmake
+install_manifest.txt
+
+# Compiled binaries and objects
+*.o
+*.obj
+*.exe
+*.out
+*.app
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+/sacd_extract
+/tools/sacd_extract/sacd_extract
+sacd_extract.exe
+
+# Debug and profiling files  
+*.dSYM/
+*.pdb
+*.ilk
+*.map
+*.idb
+core
+core.*
+vgcore.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build directories
+build/
+dist/
+debug/
+release/
+out/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+*.log
+
+# Package managers
+node_modules/
+*.tgz
+*.tar.gz
+
+# Platform specific
+.directory
+desktop.ini
+*.lnk
+
+# Coverage and testing
+*.gcno
+*.gcda
+*.gcov
+coverage/

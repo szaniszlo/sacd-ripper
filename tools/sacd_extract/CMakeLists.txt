@@ -67,8 +67,8 @@ if(NOT CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
   if (CMAKE_COMPILER_IS_GNUCC OR (CMAKE_C_COMPILER_ID MATCHES "Clang"))
     add_definitions(
         -pipe
-        -Wall -Wextra -Wcast-align -Wpointer-arith -O3
-        -Wno-unused-parameter)
+        -Wall -Wextra -Wpointer-arith -O3
+        -Wno-unused-parameter -Wno-cast-align -fno-strict-aliasing)
   endif ()
   if(NOT CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm*")
     add_definitions(
@@ -80,6 +80,7 @@ if(WIN32)
     set(CMAKE_C_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIRARIES} -lpthread -lws2_32 -liconv -static")
 elseif(APPLE)
   set(CMAKE_C_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIRARIES} -liconv -lpthread")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-no_fixup_chains")
 else()
   add_definitions(-D_FILE_OFFSET_BITS=64)
   set(CMAKE_C_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIRARIES} -lpthread")
@@ -112,3 +113,35 @@ add_executable(sacd_extract
     ${libid3_headers} ${libid3_sources}
     ${libsacd_headers} ${libsacd_sources}
     )
+
+# Strip binary in Release mode
+if(CMAKE_BUILD_TYPE_UPPER STREQUAL "RELEASE" OR NOT CMAKE_BUILD_TYPE_UPPER STREQUAL "DEBUG")
+    if(APPLE)
+        add_custom_command(TARGET sacd_extract POST_BUILD
+            COMMAND strip -x sacd_extract
+            COMMENT "Stripping debug symbols from sacd_extract")
+    else()
+        add_custom_command(TARGET sacd_extract POST_BUILD
+            COMMAND strip sacd_extract
+            COMMENT "Stripping debug symbols from sacd_extract")
+    endif()
+endif()
+
+# Install target
+install(TARGETS sacd_extract
+    RUNTIME DESTINATION bin
+    PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
+# Set default install prefix
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Default install prefix" FORCE)
+endif()
+
+# Add uninstall target
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
