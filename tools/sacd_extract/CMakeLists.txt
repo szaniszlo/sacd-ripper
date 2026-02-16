@@ -1,6 +1,6 @@
 # CMake build file for SACD Extract
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.10)
 
 # Mingw-w64 support
 OPTION(MINGW64 "Mingw-w64" NO)
